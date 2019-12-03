@@ -7,17 +7,24 @@ routers.post('/users', async(req, res) =>{
 
     try{
       await user.save()
-      res.status(201).send(user)
+      //generate token
+      const token = await user.generateAuthToken()
+      res.status(201).send({user, token})
     }catch(e){
         res.status(400).send(e)
     }
-    // user.save().then(() => {
-    //     res.status(201).send(user)
-    // }).catch((error) => {
-    //     //catches error and also show us the http status
-    //     res.status(400).send(error)
-    // })
     
+})
+
+routers.post('/users/login', async(req, res) => {
+    try{
+        const user = await User.findByCredentials(req.body.email, req.body.password)
+        const token = await user.generateAuthToken()//working with an instance
+        //sending response
+        res.send({user, token})
+    }catch(e){
+        res.status(400).send()
+    }
 })
 
 //to read user data and also target by ID
@@ -28,11 +35,6 @@ routers.get('/users', async(req,res) => {
     }catch(e){
         res.status(500).send(e)
     }
-    // User.find({}).then((users) => {
-    //     res.send(users)
-    // }).catch((error) => {
-    //     res.status(500).send(error)
-    // })
 })
 
 //get a user by any id
@@ -47,20 +49,12 @@ routers.get('/users/:id', async(req,res) => {
     }catch(e){
         res.status(500).send(e)
     }
-    // User.findById(_id).then((user) => {
-    //     if(!user){
-    //        return res.status(404).send()
-    //     }
-    //     res.status(201).send(user)
-    // }).catch((error) => {
-    //     res.status(500).send(error)
-    // })
 })
 
 //update the user
 routers.patch('/users/:id', async(req,res) =>{
     const updates = Object.keys(req.body)
-    const allowedUpdates = ['name','email', 'age']
+    const allowedUpdates = ['name', 'email', 'password', 'age']
     const isValidOperation = updates.every((update)=>{
         return allowedUpdates.includes(update)
     })
@@ -68,8 +62,19 @@ routers.patch('/users/:id', async(req,res) =>{
         return res.status(400).send({error: "Invalid updates"})
     }
     try{
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, 
-            {new: true, runValidators: true})
+        //because this function bypasses the schema
+        //create a variable
+        const user = await User.findById(req.params.id)
+
+        //updating dynamically the property of choice
+        updates.forEach((update) => {
+            //applying the request to the new user
+            user[update] = req.body[update]
+        })
+
+        //middleware gets implemented
+        await user.save()
+
         if(!user){
             return res.status(404).send()
         }
