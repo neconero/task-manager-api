@@ -13,4 +13,3 @@ NOVNC_PORT=$(expr 6080 + $DISP)
 
 x11vnc -localhost -shared -display :$DISP -forever -rfbport ${VNC_PORT} -bg -o "/tmp/x11vnc-${DISP}.log"
 cd /opt/novnc/utils && ./launch.sh --vnc "localhost:${VNC_PORT}" --listen "${NOVNC_PORT}" &
-© 2019 GitHub, Inc.
