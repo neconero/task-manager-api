@@ -7,10 +7,7 @@ const app = express()
 
 const port = process.env.port || 3000
 
-//using middleware
-app.use((req, res, next) => {
-    res.status(503).send('Site is under maintenance...')
-})
+
 
 app.use(express.json())
 app.use(userRouter)

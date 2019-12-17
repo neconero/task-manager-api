@@ -1,5 +1,6 @@
 const express = require('express')
 const routers = new express.Router()
+const auth  = require('../middleware/auth')
 const User = require('../models/user')
 
 routers.post('/users', async(req, res) =>{
@@ -28,12 +29,32 @@ routers.post('/users/login', async(req, res) => {
 })
 
 //to read user data and also target by ID
-routers.get('/users', async(req,res) => {
+routers.get('/users/me', auth, async(req,res) => {
+    res.send(req.user)
+})
+
+//logout
+routers.post('/users/logout', auth, async(req, res) =>{
     try{
-        const user = await User.find({})
-        res.send(user)
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token !== req.token
+        })
+        await req.user.save()
+
+        res.send()
     }catch(e){
-        res.status(500).send(e)
+        res.status(500).send()
+    }
+})
+
+//logout all session
+routers.post('/users/logoutAll', auth, async(req,res) => {
+    try{
+        req.user.tokens = []
+        await req.user.save()
+        res.send()
+    }catch(e){
+        res.status(500).send()
     }
 })
 
