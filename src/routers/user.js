@@ -22,7 +22,7 @@ routers.post('/users/login', async(req, res) => {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()//working with an instance
         //sending response
-        res.send({user, token})
+        res.send({user: user.getPublicProfile(), token})
     }catch(e){
         res.status(400).send()
     }
