@@ -58,22 +58,10 @@ routers.post('/users/logoutAll', auth, async(req,res) => {
     }
 })
 
-//get a user by any id
-routers.get('/users/:id', async(req,res) => {
-    const _id = req.params.id
-    try{
-        const user = await User.findById(_id)
-        if(!user){
-            return res.status(404).send() 
-        }
-        res.status(200).send(user)
-    }catch(e){
-        res.status(500).send(e)
-    }
-})
+
 
 //update the user
-routers.patch('/users/:id', async(req,res) =>{
+routers.patch('/users/me', auth,  async(req,res) =>{
     const updates = Object.keys(req.body)
     const allowedUpdates = ['name', 'email', 'password', 'age']
     const isValidOperation = updates.every((update)=>{
@@ -83,36 +71,31 @@ routers.patch('/users/:id', async(req,res) =>{
         return res.status(400).send({error: "Invalid updates"})
     }
     try{
-        //because this function bypasses the schema
-        //create a variable
-        const user = await User.findById(req.params.id)
+        
+        
 
         //updating dynamically the property of choice
         updates.forEach((update) => {
             //applying the request to the new user
-            user[update] = req.body[update]
+            req.user[update] = req.body[update]
         })
 
         //middleware gets implemented
-        await user.save()
+        await req.user.save()
 
-        if(!user){
-            return res.status(404).send()
-        }
-        res.send(user)
+        
+        res.send(req.user)
     }catch(e){
         return res.status(400).send(e)
     }
     
 })
 
-routers.delete('/users/:id', async(req, res) => {
+//delete without access to the id
+routers.delete('/users/me', auth, async(req, res) => {
     try{
-        const user = await User.findByIdAndDelete(req.params.id)
-        if(!user){
-            return res.status(404).send()
-        }
-        res.send(user)
+        await req.user.remove()
+        res.send(req.user)
     }catch(e){
         res.status(400).send(e)
     }
