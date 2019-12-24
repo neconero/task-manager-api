@@ -17,12 +17,6 @@ routers.post('/tasks', auth, async(req, res) => {
     }catch(e){
         res.status(400).send(e)
     }
-
-    // task.save().then(() => {
-    //     res.status(201).send(task)
-    // }).catch((error) => {
-    //     res.status(400).send(error)
-    // })
 })
 
 
@@ -65,9 +59,32 @@ routers.delete('/tasks/:id', auth, async(req,res) => {
     }
 })
 
+//Get tasks?completed = true
+//Get tasks?limit=x&skip=y
 routers.get('/tasks',auth, async(req, res) => {
+    const match = {}
+    //sort
+    const sort = {}
+
+    if(req.query.completed){
+        match.completed = req.query.completed === 'true'
+    }
+
+    if(req.query.sortBy){
+        const parts = req.query.sortBy.split(":")
+        sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
+    }
+
     try{
-        await req.user.populate('tasks').execPopulate()
+        await req.user.populate({
+            path: 'tasks',
+            match,
+            options:{
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort
+            }
+        }).execPopulate()
         
         res.send(req.user.tasks)
     }catch(e){
