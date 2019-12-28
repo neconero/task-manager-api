@@ -103,7 +103,6 @@ routers.delete('/users/me', auth, async(req, res) => {
 })
 
 const upload = multer({
-    dest : 'avatars',
     limits:{
         fileSize : 1000000
         },
@@ -115,12 +114,23 @@ const upload = multer({
     } 
 })
 
+//upload image to user profile
+routers.post('/users/me/avatar', auth, upload.single('avatar'), async(req, res) => {
+    //accessing the binary data(image)
+    req.user.avatar = req.file.buffer
 
-routers.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+    await req.user.save() //updated model with profile picture
     res.send()
 }, (error, req, res, next) => {
     res.status(400).send({error: error.message})
 })
 
+//delete image
+routers.delete('/users/me/avatar', auth, async(req, res) => {
+    req.user.avatar = undefined
+
+    await req.user.save()
+    res.send()
+})
 
 module.exports = routers
