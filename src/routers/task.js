@@ -2,6 +2,7 @@ const express = require('express')
 const routers = new express.Router()
 const Task = require('../models/task')
 const auth = require('../middleware/auth')
+const multer = require('multer')
 
 routers.post('/tasks', auth, async(req, res) => {
     // const task = new Task(req.body)
@@ -109,4 +110,12 @@ routers.get('/tasks/:id', auth, async(req, res) => {
     
 })
 
+
+const upload = multer({
+    dest : 'avatars'
+})
+
+routers.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+    res.send()
+})
 module.exports = routers
