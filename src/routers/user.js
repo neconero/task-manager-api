@@ -2,13 +2,17 @@ const express = require('express')
 const routers = new express.Router()
 const auth  = require('../middleware/auth')
 const multer = require('multer')
+const sharp = require('sharp')
 const User = require('../models/user')
+const {sendWelcomeEmail, sendCancellationEmail} = require('../emails/account')
 
 routers.post('/users', async(req, res) =>{
     const user = new User(req.body)
 
     try{
       await user.save()
+      //welcome email after user is saved
+      sendWelcomeEmail(user.email, user.name)
       //generate token
       const token = await user.generateAuthToken()
       res.status(201).send({user, token})
@@ -96,6 +100,7 @@ routers.patch('/users/me', auth,  async(req,res) =>{
 routers.delete('/users/me', auth, async(req, res) => {
     try{
         await req.user.remove()
+        sendCancellationEmail(email, name)
         res.send(req.user)
     }catch(e){
         res.status(400).send(e)
@@ -117,7 +122,9 @@ const upload = multer({
 //upload image to user profile
 routers.post('/users/me/avatar', auth, upload.single('avatar'), async(req, res) => {
     //accessing the binary data(image)
-    req.user.avatar = req.file.buffer
+    const buffer = await sharp(req.file.buffer).resize(330, 350).png().toBuffer()
+    
+    req.user.avatar = buffer
 
     await req.user.save() //updated model with profile picture
     res.send()
@@ -143,7 +150,7 @@ routers.get('/users/:id/avatar', auth, async(req, res) => {
         throw new Error()
     }
 
-    res.set('Content-Type', 'image/jpg')
+    res.set('Content-Type', 'image/png')
     res.send(user.avatar)
 }catch(e){
     res.status(404).send()
