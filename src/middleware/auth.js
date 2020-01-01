@@ -5,7 +5,7 @@ const auth = async(req, res, next) => {
         //get the value of token in postman
         const token = req.header('Authorization').replace('Bearer ', '')
         //verify if the provided token exist
-        const decoded = jwt.verify(token, 'edondeyred')
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
         //find user
         const user = await User.findOne({_id: decoded._id, 'tokens.token': token})
 

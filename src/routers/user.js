@@ -2,7 +2,7 @@ const express = require('express')
 const routers = new express.Router()
 const auth  = require('../middleware/auth')
 const multer = require('multer')
-const sharp = require('sharp')
+//const sharp = require('sharp')
 const User = require('../models/user')
 const {sendWelcomeEmail, sendCancellationEmail} = require('../emails/account')
 
@@ -122,9 +122,9 @@ const upload = multer({
 //upload image to user profile
 routers.post('/users/me/avatar', auth, upload.single('avatar'), async(req, res) => {
     //accessing the binary data(image)
-    const buffer = await sharp(req.file.buffer).resize(330, 350).png().toBuffer()
+    //const buffer = await sharp(req.file.buffer).resize(330, 350).png().toBuffer()
     
-    req.user.avatar = buffer
+    req.user.avatar = req.file.buffer
 
     await req.user.save() //updated model with profile picture
     res.send()
